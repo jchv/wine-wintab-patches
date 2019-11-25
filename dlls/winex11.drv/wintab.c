@@ -1014,7 +1014,7 @@ int CDECL X11DRV_AttachEventQueueToTablet(HWND hOwner)
     XDeviceInfo     *target = NULL;
     XDevice         *the_device;
     XEventClass     event_list[7];
-    Window          win = X11DRV_get_whole_window( hOwner );
+    Window          win = X11DRV_get_whole_window( GetDesktopWindow() );
 
     if (!win || !xinput_handle) return 0;
 

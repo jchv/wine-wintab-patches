@@ -143,6 +143,34 @@ static LPOPENCONTEXT TABLET_FindOpenContext(HCTX hCtx)
     return NULL;
 }
 
+/* Find the currently active context. This is the first enabled context that
+   is owned by the same process as the foreground window. */
+LPOPENCONTEXT TABLET_GetActiveContext()
+{
+    LPOPENCONTEXT ptr;
+    DWORD ctx_proc;
+    DWORD fg_proc = GetCurrentProcessId();
+
+    GetWindowThreadProcessId(GetForegroundWindow(), &fg_proc);
+
+    EnterCriticalSection(&csTablet);
+
+    for (ptr = gOpenContexts; ptr != NULL; ptr = ptr->next)
+    {
+        if (!ptr->enabled)
+            continue;
+
+        GetWindowThreadProcessId(ptr->hwndOwner, &ctx_proc);
+
+        if (ctx_proc == fg_proc)
+            break;
+    }
+
+    LeaveCriticalSection(&csTablet);
+
+    return ptr;
+}
+
 static inline BOOL LoadTablet(void)
 {
     static enum {TI_START = 0, TI_OK, TI_FAIL} loaded = TI_START;
@@ -211,13 +239,13 @@ LPOPENCONTEXT AddPacketToContextQueue(LPWTPACKET packet, HWND hwnd)
             packet->pkChanged = packet->pkChanged & ptr->context.lcPktData;
 
             /* Scale  as per documentation */
-            packet->pkY = ScaleForContext(packet->pkY, ptr->context.lcInOrgY,
+            /*packet->pkY = ScaleForContext(packet->pkY, ptr->context.lcInOrgY,
                                 ptr->context.lcInExtY, ptr->context.lcOutOrgY,
                                 ptr->context.lcOutExtY);
 
             packet->pkX = ScaleForContext(packet->pkX, ptr->context.lcInOrgX,
                                 ptr->context.lcInExtX, ptr->context.lcOutOrgX,
-                                ptr->context.lcOutExtX);
+                                ptr->context.lcOutExtX);*/
 
             /* flip the Y axis */
             if (ptr->context.lcOutExtY > 0)

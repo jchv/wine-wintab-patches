@@ -138,7 +138,6 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpReserved)
     return TRUE;
 }
 
-
 /*
  * The window proc for the default TABLET window
  */
@@ -157,29 +156,38 @@ static LRESULT WINAPI TABLET_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
             {
                 WTPACKET packet;
                 LPOPENCONTEXT handler;
-                if (pGetCurrentPacket)
-                {
-                    pGetCurrentPacket(&packet);
-                    handler = AddPacketToContextQueue(&packet,(HWND)lParam);
-                    if (handler && handler->context.lcOptions & CXO_MESSAGES)
-                       TABLET_PostTabletMessage(handler, _WT_PACKET(handler->context.lcMsgBase),
-                                   (WPARAM)packet.pkSerialNumber,
-                                   (LPARAM)handler->handle, FALSE);
-                }
+
+                if (!pGetCurrentPacket)
+                    break;
+
+                pGetCurrentPacket(&packet);
+                handler = TABLET_GetActiveContext();
+                if (!handler)
+                    break;
+
+                AddPacketToContextQueue(&packet, handler->hwndOwner);
+                if (handler->context.lcOptions & CXO_MESSAGES)
+                    TABLET_PostTabletMessage(handler, _WT_PACKET(handler->context.lcMsgBase),
+                                (WPARAM)packet.pkSerialNumber,
+                                (LPARAM)handler->handle, FALSE);
                 break;
             }
         case WT_PROXIMITY:
             {
                 WTPACKET packet;
                 LPOPENCONTEXT handler;
-                if (pGetCurrentPacket)
-                {
-                    pGetCurrentPacket(&packet);
-                    handler = AddPacketToContextQueue(&packet,(HWND)wParam);
-                    if (handler)
-                        TABLET_PostTabletMessage(handler, WT_PROXIMITY,
-                                                (WPARAM)handler->handle, lParam, TRUE);
-                }
+
+                if (!pGetCurrentPacket)
+                    break;
+
+                pGetCurrentPacket(&packet);
+                handler = TABLET_GetActiveContext();
+                if (!handler)
+                    break;
+
+                AddPacketToContextQueue(&packet, handler->hwndOwner);
+                TABLET_PostTabletMessage(handler, WT_PROXIMITY,
+                                        (WPARAM)handler->handle, lParam, TRUE);
                 break;
             }
     }

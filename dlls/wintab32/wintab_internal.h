@@ -146,6 +146,7 @@ typedef struct tagOPENCONTEXT
     struct tagOPENCONTEXT *next;
 } OPENCONTEXT, *LPOPENCONTEXT;
 
+LPOPENCONTEXT TABLET_GetActiveContext();
 int TABLET_PostTabletMessage(LPOPENCONTEXT newcontext, UINT msg, WPARAM wParam,
                              LPARAM lParam, BOOL send_always) DECLSPEC_HIDDEN;
 LPOPENCONTEXT AddPacketToContextQueue(LPWTPACKET packet, HWND hwnd) DECLSPEC_HIDDEN;
